@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phishing URL Detector</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>🛡️ Phishing URL Detector</h1>
+      <p class="subtitle">Analisis heuristik struktur URL untuk mendeteksi indikasi phishing.</p>
+    </header>
+
+    <form method="post" action="{{ url_for('analyze_form') }}" class="card">
+      <label for="url">Masukkan URL</label>
+      <div class="row">
+        <input id="url" name="url" type="text" required maxlength="2048"
+               placeholder="https://contoh.com/login" value="{{ url or '' }}" autocomplete="off">
+        <button type="submit">Analisis</button>
+      </div>
+      <p class="hint">URL tidak dikunjungi atau dibuka; hanya teksnya yang dianalisis.</p>
+    </form>
+
+    {% if error %}
+    <div class="card error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    {% if result %}
+    <section class="card result {{ result.level }}">
+      <div class="score-box">
+        <div class="score">{{ result.score }}<span>/100</span></div>
+        <div class="label">{{ result.label }}</div>
+      </div>
+      <div class="bar"><div class="fill" style="width: {{ result.score }}%"></div></div>
+
+      <h2>Struktur URL</h2>
+      <table>
+        <tr><th>Skema</th><td>{{ result.parts.scheme }}</td></tr>
+        <tr><th>Host</th><td>{{ result.parts.host }}</td></tr>
+        <tr><th>Domain utama</th><td>{{ result.parts.registered_domain }}</td></tr>
+        <tr><th>Host berupa IP</th><td>{{ 'Ya' if result.parts.host_is_ip else 'Tidak' }}</td></tr>
+        <tr><th>Port</th><td>{{ result.parts.port or 'default' }}</td></tr>
+        <tr><th>Path</th><td>{{ result.parts.path }}</td></tr>
+        <tr><th>Query</th><td>{{ result.parts.query or '-' }}</td></tr>
+        <tr><th>Panjang</th><td>{{ result.parts.length }} karakter</td></tr>
+      </table>
+
+      <h2>Temuan</h2>
+      {% if result.findings %}
+      <ul class="findings">
+        {% for f in result.findings %}
+        <li><span class="pts">+{{ f.points }}</span> {{ f.description }}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>Tidak ada pola mencurigakan yang terdeteksi.</p>
+      {% endif %}
+
+      <p class="disclaimer">ℹ️ {{ result.disclaimer }}</p>
+    </section>
+    {% endif %}
+
+    <footer>Dibuat dengan Python, Flask &amp; Regex · <a href="https://github.com/" rel="noopener">GitHub</a></footer>
+  </main>
+</body>
+</html>
